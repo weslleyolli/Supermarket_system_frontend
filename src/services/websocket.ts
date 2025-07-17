@@ -1,4 +1,5 @@
-import { io, Socket } from 'socket.io-client';
+// Comentado temporariamente - implementação futura
+// import { io, Socket } from 'socket.io-client';
 
 // WebSocket types
 interface SaleUpdateData {
@@ -20,7 +21,7 @@ interface DashboardUpdateData {
 }
 
 class WebSocketService {
-  private socket: any | null = null;
+  private socket: WebSocket | null = null;
   private wsUrl: string;
 
   constructor() {
@@ -62,21 +63,21 @@ class WebSocketService {
   }
 
   // Listen for real-time updates
-  onSaleUpdate(callback: (data: SaleUpdateData) => void): void {
+  onSaleUpdate(_callback: (data: SaleUpdateData) => void): void {
     // Implementation would register callback for sale updates
     if (import.meta.env.VITE_DEBUG === 'true') {
       console.log('Registered sale update listener');
     }
   }
 
-  onStockUpdate(callback: (data: StockUpdateData) => void): void {
+  onStockUpdate(_callback: (data: StockUpdateData) => void): void {
     // Implementation would register callback for stock updates
     if (import.meta.env.VITE_DEBUG === 'true') {
       console.log('Registered stock update listener');
     }
   }
 
-  onDashboardUpdate(callback: (data: DashboardUpdateData) => void): void {
+  onDashboardUpdate(_callback: (data: DashboardUpdateData) => void): void {
     // Implementation would register callback for dashboard updates
     if (import.meta.env.VITE_DEBUG === 'true') {
       console.log('Registered dashboard update listener');
@@ -118,7 +119,6 @@ class WebSocketService {
   isConnected(): boolean {
     return this.socket !== null;
   }
-}
 }
 
 export const webSocketService = new WebSocketService();

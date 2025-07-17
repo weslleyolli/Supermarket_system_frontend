@@ -1,15 +1,23 @@
+// src/services/api.ts - VERSÃO COMPLETA COM DADOS REAIS
+
 import axios, { AxiosInstance, AxiosResponse } from 'axios';
 import type { 
   Product, 
   CreateProductRequest, 
   ProductFilters,
   Sale, 
-  CreateSaleRequest,
   Customer, 
   CreateCustomerRequest,
   DashboardData,
   PaginatedResponse 
 } from '../types';
+import type { 
+  Cart, 
+  BarcodeInput, 
+  PaymentRequest, 
+  PaymentResponse,
+  CartOperation 
+} from '../types/pos';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
@@ -54,93 +62,7 @@ class ApiService {
     );
   }
 
-  // Products
-  async getProducts(filters?: ProductFilters): Promise<PaginatedResponse<Product>> {
-    return this.api.get('/api/products', { params: filters });
-  }
-
-  async getProduct(id: number): Promise<Product> {
-    return this.api.get(`/api/products/${id}`);
-  }
-
-  async createProduct(product: CreateProductRequest): Promise<Product> {
-    return this.api.post('/api/products', product);
-  }
-
-  async updateProduct(id: number, product: Partial<CreateProductRequest>): Promise<Product> {
-    return this.api.put(`/api/products/${id}`, product);
-  }
-
-  async deleteProduct(id: number): Promise<void> {
-    return this.api.delete(`/api/products/${id}`);
-  }
-
-  // Sales
-  async createSale(sale: CreateSaleRequest): Promise<Sale> {
-    return this.api.post('/api/sales', sale);
-  }
-
-  async getSales(params?: {
-    page?: number;
-    per_page?: number;
-    start_date?: string;
-    end_date?: string;
-  }): Promise<PaginatedResponse<Sale>> {
-    return this.api.get('/api/sales', { params });
-  }
-
-  async getSale(id: number): Promise<Sale> {
-    return this.api.get(`/api/sales/${id}`);
-  }
-
-  // Customers
-  async getCustomers(params?: {
-    search?: string;
-    page?: number;
-    per_page?: number;
-  }): Promise<PaginatedResponse<Customer>> {
-    return this.api.get('/api/customers', { params });
-  }
-
-  async createCustomer(customer: CreateCustomerRequest): Promise<Customer> {
-    return this.api.post('/api/customers', customer);
-  }
-
-  async updateCustomer(id: number, customer: Partial<CreateCustomerRequest>): Promise<Customer> {
-    return this.api.put(`/api/customers/${id}`, customer);
-  }
-
-  async getCustomerHistory(id: number): Promise<Sale[]> {
-    return this.api.get(`/api/customers/${id}/history`);
-  }
-
-  // Reports
-  async getDashboardData(): Promise<DashboardData> {
-    return this.api.get('/api/reports/dashboard');
-  }
-
-  async getSalesReport(params: {
-    start_date: string;
-    end_date: string;
-    group_by?: 'day' | 'week' | 'month';
-  }): Promise<unknown> {
-    return this.api.get('/api/reports/sales', { params });
-  }
-
-  // Hardware
-  async scanBarcode(): Promise<{ success: boolean; barcode?: string; product?: Product }> {
-    return this.api.post('/api/hardware/barcode/scan');
-  }
-
-  async getWeightFromScale(): Promise<{ weight: number }> {
-    return this.api.get('/api/hardware/scale/weight');
-  }
-
-  async printReceipt(saleId: number): Promise<{ success: boolean }> {
-    return this.api.post(`/api/hardware/printer/receipt/${saleId}`);
-  }
-
-  // Authentication methods
+  // ===== AUTHENTICATION =====
   async login(credentials: { username: string; password: string }): Promise<{
     access_token: string;
     user: {
@@ -151,8 +73,7 @@ class ApiService {
       permissions: string[];
     }
   }> {
-    const response = await this.api.post('/api/auth/login', credentials);
-    return response.data;
+    return this.api.post('/api/v1/auth/login', credentials);
   }
 
   async getCurrentUser(): Promise<{
@@ -162,13 +83,227 @@ class ApiService {
     role: 'admin' | 'manager' | 'cashier';
     permissions: string[];
   }> {
-    const response = await this.api.get('/api/auth/me');
-    return response.data;
+    return this.api.get('/api/v1/auth/me');
   }
 
-  async refreshToken(): Promise<{ access_token: string }> {
-    const response = await this.api.post('/api/auth/refresh');
-    return response.data;
+  // ===== PRODUCTS =====
+  async getProducts(filters?: ProductFilters): Promise<Product[]> {
+    console.log('🔍 Buscando produtos com filtros:', filters);
+    return this.api.get('/api/v1/products', { params: filters });
+  }
+
+  async searchProducts(params: {
+    query?: string;
+    category_id?: number;
+    active_only?: boolean;
+    low_stock_only?: boolean;
+    skip?: number;
+    limit?: number;
+  }): Promise<Product[]> {
+    console.log('🔍 Pesquisando produtos:', params);
+    return this.api.get('/api/v1/products/search', { params });
+  }
+
+  async getProduct(id: number): Promise<Product> {
+    return this.api.get(`/api/v1/products/${id}`);
+  }
+
+  async createProduct(product: CreateProductRequest): Promise<Product> {
+    console.log('➕ Criando produto:', product);
+    return this.api.post('/api/v1/products', product);
+  }
+
+  async updateProduct(id: number, product: Partial<CreateProductRequest>): Promise<Product> {
+    console.log('✏️ Atualizando produto:', id, product);
+    return this.api.put(`/api/v1/products/${id}`, product);
+  }
+
+  async deleteProduct(id: number): Promise<void> {
+    console.log('🗑️ Deletando produto:', id);
+    return this.api.delete(`/api/v1/products/${id}`);
+  }
+
+  // Busca por código de barras
+  async searchByBarcode(barcode: string): Promise<Product> {
+    console.log('🔍 Buscando por código de barras:', barcode);
+    return this.api.post('/api/v1/products/barcode-search', { barcode });
+  }
+
+  // Produtos com estoque baixo
+  async getLowStockProducts(limit: number = 50): Promise<Product[]> {
+    return this.api.get('/api/v1/products/low-stock', { params: { limit } });
+  }
+
+  // Categorias
+  async getCategories(): Promise<Array<{id: number; name: string; products_count?: number}>> {
+    return this.api.get('/api/v1/products/categories');
+  }
+
+  async createCategory(category: { name: string; description?: string }): Promise<{id: number; name: string; description?: string}> {
+    return this.api.post('/api/v1/products/categories', category);
+  }
+
+  // ===== PDV/CART =====
+  async addProductToCart(barcodeInput: BarcodeInput): Promise<{
+    success: boolean;
+    message: string;
+    product: {
+      id: number;
+      name: string;
+      price: number;
+      requires_weighing: boolean;
+    };
+    cart: Cart;
+  }> {
+    console.log('🛒 Adicionando produto ao carrinho:', barcodeInput);
+    return this.api.post('/api/v1/pdv/add-product', barcodeInput);
+  }
+
+  async getCurrentCart(): Promise<Cart> {
+    console.log('🛒 Obtendo carrinho atual');
+    return this.api.get('/api/v1/pdv/cart');
+  }
+
+  async updateCartItem(operation: CartOperation): Promise<Cart> {
+    console.log('🔄 Atualizando carrinho:', operation);
+    return this.api.post('/api/v1/pdv/cart/update', operation);
+  }
+
+  async processPayment(paymentRequest: PaymentRequest): Promise<PaymentResponse> {
+    console.log('💳 Processando pagamento:', paymentRequest);
+    return this.api.post('/api/v1/pdv/payment', paymentRequest);
+  }
+
+  // ===== SALES =====
+  async getSales(params?: {
+    start_date?: string;
+    end_date?: string;
+    user_id?: number;
+    status?: string;
+    skip?: number;
+    limit?: number;
+  }): Promise<Sale[]> {
+    console.log('📊 Buscando vendas:', params);
+    return this.api.get('/api/v1/sales/', { params });
+  }
+
+  async getSale(id: number): Promise<Sale> {
+    return this.api.get(`/api/v1/sales/${id}`);
+  }
+
+  async cancelSale(saleId: number): Promise<{ success: boolean }> {
+    console.log('❌ Cancelando venda:', saleId);
+    return this.api.post(`/api/v1/sales/${saleId}/cancel`);
+  }
+
+  // ===== CUSTOMERS =====
+  async getCustomers(params?: {
+    search?: string;
+    page?: number;
+    per_page?: number;
+  }): Promise<PaginatedResponse<Customer>> {
+    console.log('� Buscando clientes:', params);
+    return this.api.get('/api/v1/customers', { params });
+  }
+
+  async createCustomer(customer: CreateCustomerRequest): Promise<Customer> {
+    console.log('➕ Criando cliente:', customer);
+    return this.api.post('/api/v1/customers', customer);
+  }
+
+  async updateCustomer(id: number, customer: Partial<CreateCustomerRequest>): Promise<Customer> {
+    console.log('✏️ Atualizando cliente:', id, customer);
+    return this.api.put(`/api/v1/customers/${id}`, customer);
+  }
+
+  async getCustomerHistory(id: number): Promise<Sale[]> {
+    return this.api.get(`/api/v1/customers/${id}/history`);
+  }
+
+  // ===== REPORTS =====
+  async getDashboardData(targetDate?: string): Promise<DashboardData> {
+    const params = targetDate ? { target_date: targetDate } : {};
+    console.log('📊 Buscando dados do dashboard');
+    return this.api.get('/api/v1/reports/dashboard', { params });
+  }
+
+  async getKPIsOnly(targetDate?: string): Promise<{
+    today_sales: number;
+    products_sold: number;
+    customers_served: number;
+    average_ticket: number;
+  }> {
+    const params = targetDate ? { target_date: targetDate } : {};
+    console.log('📈 Buscando KPIs');
+    return this.api.get('/api/v1/reports/kpis', { params });
+  }
+
+  async getStockAlerts(limit: number = 50): Promise<Array<{
+    product_id: number;
+    product_name: string;
+    current_stock: number;
+    min_stock: number;
+    category: string;
+  }>> {
+    console.log('⚠️ Buscando alertas de estoque');
+    return this.api.get('/api/v1/reports/stock-alerts', { params: { limit } });
+  }
+
+  // Endpoint para vendas diárias
+  async getDailySales(days: number = 7): Promise<Array<{
+    date: string;
+    total_sales: number;
+    total_transactions: number;
+    total_products: number;
+    average_ticket: number;
+  }>> {
+    console.log(`📅 Buscando vendas dos últimos ${days} dias`);
+    return this.api.get('/api/v1/reports/daily-sales', { params: { days } });
+  }
+
+  // Endpoint para produtos mais vendidos
+  async getTopProducts(limit: number = 5): Promise<Array<{
+    product_id: number;
+    product_name: string;
+    category_name: string;
+    quantity_sold: number;
+    revenue: number;
+    profit: number;
+  }>> {
+    console.log(`🏆 Buscando top ${limit} produtos`);
+    return this.api.get('/api/v1/reports/top-products', { params: { limit } });
+  }
+
+  // ===== HARDWARE =====
+  async scanBarcode(): Promise<{ success: boolean; barcode?: string; product?: Product }> {
+    console.log('📷 Escaneando código de barras');
+    return this.api.post('/api/v1/hardware/barcode/scan');
+  }
+
+  async getWeightFromScale(): Promise<{ weight: number }> {
+    console.log('⚖️ Obtendo peso da balança');
+    return this.api.get('/api/v1/hardware/scale/weight');
+  }
+
+  async printReceipt(saleId: number): Promise<{ success: boolean }> {
+    console.log('🖨️ Imprimindo recibo da venda:', saleId);
+    return this.api.post(`/api/v1/hardware/printer/receipt/${saleId}`);
+  }
+
+  // ===== UTILITY METHODS =====
+  async healthCheck(): Promise<{ status: string; timestamp: string }> {
+    return this.api.get('/health');
+  }
+
+  // Método para testar conectividade
+  async testConnection(): Promise<boolean> {
+    try {
+      await this.healthCheck();
+      return true;
+    } catch (error) {
+      console.error('❌ Erro de conectividade:', error);
+      return false;
+    }
   }
 }
 

@@ -1,3 +1,3 @@
 export { useApi } from './useApi';
-export { useAuth, AuthProvider } from './useAuth';
+export { useAuth, AuthProvider } from './auth';
 export { useHardware } from './useHardware';

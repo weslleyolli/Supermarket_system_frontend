@@ -46,7 +46,7 @@ class AuthService {
         password: credentials.password
       });
 
-      const user = response.user as User;
+      const user = response.user as unknown as User;
       this.saveAuthState(response.access_token, user);
 
       return {

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { Eye, EyeOff, LogIn, AlertCircle } from 'lucide-react';
+import { Eye, EyeOff, ShoppingCart, Lock, User, AlertCircle } from 'lucide-react';
 import { useAuth } from '../../hooks/auth';
 
 interface LoginFormData {
@@ -35,63 +35,80 @@ const Login: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+    <div 
+      className="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 bg-cover bg-center bg-no-repeat"
+      style={{
+        backgroundImage: 'url(/bg.png)',
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat'
+      }}
+    >
       <div className="max-w-md w-full space-y-8">
-        <div className="text-center">
-          <div className="mx-auto h-16 w-16 bg-blue-600 rounded-xl flex items-center justify-center">
-            <LogIn className="h-8 w-8 text-white" />
+        {/* Logo and Title */}
+        <div className="text-center mb-8">
+          <div className="flex items-center justify-center mb-6">
+            <ShoppingCart className="h-8 w-8 text-red-500 mr-3" />
+            <h1 className="text-3xl font-bold text-white tracking-wide">
+              O BARATEIRO
+            </h1>
           </div>
-          <h2 className="mt-6 text-3xl font-bold text-gray-900">
-            {import.meta.env.VITE_APP_NAME || 'Sistema de Supermercado'}
-          </h2>
-          <p className="mt-2 text-sm text-gray-600">
-            Faça login para acessar o sistema
-          </p>
         </div>
 
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit(onSubmit)}>
-          <div className="bg-white p-8 rounded-lg shadow-md space-y-6">
+        {/* Login Form Container */}
+        <div 
+          className="backdrop-blur-xl rounded-3xl border border-white/20 p-10 shadow-2xl ring-1 ring-white/10"
+          style={{
+            background: 'rgba(0, 0, 0, 0.4)'
+          }}
+        >
+          <h2 className="text-3xl font-bold text-white text-center mb-10 tracking-wide">
+            Login
+          </h2>
+
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
             {/* Error Alert */}
             {loginError && (
-              <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+              <div className="bg-red-500/20 border border-red-500/30 rounded-lg p-4 backdrop-blur-sm">
                 <div className="flex items-center">
-                  <AlertCircle className="h-5 w-5 text-red-600 mr-2" />
-                  <p className="text-red-800 text-sm">{loginError}</p>
+                  <AlertCircle className="h-5 w-5 text-red-400 mr-2" />
+                  <p className="text-red-300 text-sm">{loginError}</p>
                 </div>
               </div>
             )}
 
             {/* Username Field */}
-            <div>
-              <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-2">
-                Usuário
-              </label>
-              <input
-                {...register('username', { 
-                  required: 'Nome de usuário é obrigatório',
-                  minLength: {
-                    value: 3,
-                    message: 'Nome de usuário deve ter pelo menos 3 caracteres'
-                  }
-                })}
-                type="text"
-                id="username"
-                className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                  errors.username ? 'border-red-300' : 'border-gray-300'
-                }`}
-                placeholder="Digite seu nome de usuário"
-              />
+            <div className="space-y-3">
+              <div className="relative group">
+                <User className="absolute left-5 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400 group-focus-within:text-blue-400 transition-colors" />
+                <input
+                  {...register('username', { 
+                    required: 'Nome de usuário é obrigatório',
+                    minLength: {
+                      value: 3,
+                      message: 'Nome de usuário deve ter pelo menos 3 caracteres'
+                    }
+                  })}
+                  type="text"
+                  id="username"
+                  className={`w-full pl-14 pr-5 py-5 border border-white/20 rounded-2xl text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-400 focus:border-blue-400 backdrop-blur-sm transition-all duration-300 ${
+                    errors.username ? 'border-red-400 focus:ring-red-400' : ''
+                  }`}
+                  style={{
+                    background: 'rgba(255, 255, 255, 0.08)'
+                  }}
+                  placeholder="Username"
+                />
+              </div>
               {errors.username && (
-                <p className="text-red-600 text-sm mt-1">{errors.username.message}</p>
+                <p className="text-red-400 text-sm ml-3 animate-pulse">{errors.username.message}</p>
               )}
             </div>
 
             {/* Password Field */}
-            <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
-                Senha
-              </label>
-              <div className="relative">
+            <div className="space-y-3">
+              <div className="relative group">
+                <Lock className="absolute left-5 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400 group-focus-within:text-blue-400 transition-colors" />
                 <input
                   {...register('password', { 
                     required: 'Senha é obrigatória',
@@ -102,25 +119,28 @@ const Login: React.FC = () => {
                   })}
                   type={showPassword ? 'text' : 'password'}
                   id="password"
-                  className={`w-full px-3 py-2 pr-10 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                    errors.password ? 'border-red-300' : 'border-gray-300'
+                  className={`w-full pl-14 pr-14 py-5 border border-white/20 rounded-2xl text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-400 focus:border-blue-400 backdrop-blur-sm transition-all duration-300 ${
+                    errors.password ? 'border-red-400 focus:ring-red-400' : ''
                   }`}
-                  placeholder="Digite sua senha"
+                  style={{
+                    background: 'rgba(255, 255, 255, 0.08)'
+                  }}
+                  placeholder="Password"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                  className="absolute right-5 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white transition-colors duration-200"
                 >
                   {showPassword ? (
-                    <EyeOff className="h-5 w-5 text-gray-400" />
+                    <EyeOff className="h-5 w-5" />
                   ) : (
-                    <Eye className="h-5 w-5 text-gray-400" />
+                    <Eye className="h-5 w-5" />
                   )}
                 </button>
               </div>
               {errors.password && (
-                <p className="text-red-600 text-sm mt-1">{errors.password.message}</p>
+                <p className="text-red-400 text-sm ml-3 animate-pulse">{errors.password.message}</p>
               )}
             </div>
 
@@ -128,28 +148,31 @@ const Login: React.FC = () => {
             <button
               type="submit"
               disabled={isSubmitting || loading}
-              className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2 font-medium"
+              className="w-full text-white py-5 px-6 rounded-2xl font-semibold text-lg focus:ring-4 focus:ring-blue-400/50 focus:ring-offset-2 focus:ring-offset-transparent disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 shadow-xl hover:shadow-2xl transform hover:scale-[1.02] active:scale-[0.98]"
+              style={{
+                background: 'linear-gradient(135deg, #00007F 0%, #0C009F 50%, #1800BF 100%)'
+              }}
             >
               {(isSubmitting || loading) ? (
-                <>
-                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                <div className="flex items-center justify-center space-x-3">
+                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-white"></div>
                   <span>Entrando...</span>
-                </>
+                </div>
               ) : (
-                <>
-                  <LogIn className="h-5 w-5" />
-                  <span>Entrar</span>
-                </>
+                'Log in'
               )}
             </button>
-          </div>
-        </form>
 
-        {/* Development Info */}
-        <div className="text-center">
-          <p className="text-xs text-gray-500">
-            Desenvolvido com React + TypeScript + Vite
-          </p>
+            {/* Forgot Password Link */}
+            <div className="text-center pt-2">
+              <button
+                type="button"
+                className="text-gray-300 hover:text-white transition-colors duration-200 text-sm underline underline-offset-4 hover:underline-offset-2"
+              >
+                Forgot password?
+              </button>
+            </div>
+          </form>
         </div>
       </div>
     </div>

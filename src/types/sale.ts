@@ -1,28 +1,46 @@
 import { Product } from './product';
+import { PaymentMethod } from './pos';
 
 export interface SaleItem {
-  id?: number;
+  id: number;
   product_id: number;
-  product_name: string;
   quantity: number;
+  weight?: number;
   unit_price: number;
-  total_price: number;
-  discount?: number;
+  original_total_price: number;
+  discount_applied: number;
+  bulk_discount_applied: number;
+  final_total_price: number;
+  product_name: string;
+  product_barcode: string;
 }
 
 export interface Sale {
   id: number;
   customer_id?: number;
-  customer_name?: string;
-  items: SaleItem[];
-  subtotal: number;
-  discount_total: number;
-  tax_total: number;
-  total: number;
-  payment_method: string;
-  status: 'pending' | 'completed' | 'cancelled';
+  user_id: number;
+  subtotal_amount: number;
+  discount_amount: number;
+  bulk_discount_amount: number;
+  final_amount: number;
+  payment_method: PaymentMethod;
+  status: 'completed' | 'cancelled';
   created_at: string;
-  updated_at: string;
+  items: SaleItem[];
+  // Campos calculados:
+  total_items?: number;
+  total_quantity?: number;
+  total_savings?: number;
+}
+
+export interface SaleSummary {
+  id: number;
+  final_amount: number;
+  payment_method: PaymentMethod;
+  status: 'completed' | 'cancelled';
+  total_items: number;
+  created_at: string;
+  cashier_name: string;
 }
 
 export interface CreateSaleRequest {
@@ -37,7 +55,7 @@ export interface CreateSaleRequest {
   discount_total?: number;
 }
 
-export interface Cart extends Omit<Product, 'stock' | 'min_stock' | 'max_stock'> {
+export interface SaleCart extends Omit<Product, 'stock_quantity' | 'min_stock_level'> {
   quantity: number;
   discount?: number;
 }
