@@ -4,7 +4,7 @@ import { AuthProvider, useAuth } from './hooks/auth';
 import ProtectedRoute from './components/auth/ProtectedRoute';
 import POSInterface from './components/pos/POSInterface';
 import Dashboard from './components/reports/Dashboard';
-import ProductList from './components/inventory/ProductList';
+import StockManagement from './components/stock/StockManagement';
 
 type AppView = 'pos' | 'dashboard' | 'inventory' | 'customers' | 'settings';
 
@@ -37,7 +37,7 @@ const AppContent: React.FC = () => {
       case 'dashboard':
         return <Dashboard />;
       case 'inventory':
-        return <ProductList />;
+        return <StockManagement />;
       case 'customers':
         return (
           <div className="p-6">

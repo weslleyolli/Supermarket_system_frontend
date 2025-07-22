@@ -22,6 +22,7 @@ import {
 } from 'lucide-react';
 import { useDashboard } from '../../hooks/useDashboard';
 import { DebugPanel } from '../debug/DebugPanel';
+import AlertDebugger from '../debug/AlertDebugger';
 import { addDebugToDashboard } from '../../utils/debugDashboard';
 
 // Adicionar debug tools ao window em desenvolvimento
@@ -197,10 +198,7 @@ const Dashboard = () => {
     error,
     lastUpdated,
     refreshData
-  } = useDashboard({
-    autoRefresh: true,
-    refreshInterval: 30000 // 30 segundos
-  });
+  } = useDashboard();
 
   const handleRefresh = () => {
     refreshData();
@@ -416,7 +414,7 @@ const Dashboard = () => {
 
         {/* Alertas de Estoque */}
         <div>
-          <StockAlerts alerts={dashboardData.stock_alerts?.map(alert => ({
+          <StockAlerts alerts={dashboardData.low_stock_alerts?.map(alert => ({
             product_name: alert.product_name,
             current_stock: alert.current_stock,
             min_stock: alert.min_stock
@@ -430,31 +428,41 @@ const Dashboard = () => {
         <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
           <h3 className="text-lg font-medium text-gray-900 mb-4">Top 5 Produtos Mais Vendidos</h3>
           <div className="space-y-4">
-            {(dashboardData.top_products || []).map((product, index: number) => (
-              <div key={index} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
-                <div className="flex items-center space-x-3">
-                  <div className="flex-shrink-0">
-                    <div className="w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center text-sm font-medium">
-                      {index + 1}
+            {(dashboardData.top_products || []).length === 0 ? (
+              <div className="text-center py-8">
+                <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Package className="h-8 w-8 text-gray-400" />
+                </div>
+                <p className="text-gray-500 text-sm">Nenhuma venda registrada ainda</p>
+                <p className="text-gray-400 text-xs mt-1">Os produtos aparecerão aqui após as primeiras vendas</p>
+              </div>
+            ) : (
+              (dashboardData.top_products || []).map((product, index: number) => (
+                <div key={index} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                  <div className="flex items-center space-x-3">
+                    <div className="flex-shrink-0">
+                      <div className="w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center text-sm font-medium">
+                        {index + 1}
+                      </div>
+                    </div>
+                    <div>
+                      <h4 className="font-medium text-gray-900">{product.product_name}</h4>
+                      <p className="text-sm text-gray-600">
+                        {product.quantity_sold} unidades
+                      </p>
                     </div>
                   </div>
-                  <div>
-                    <h4 className="font-medium text-gray-900">{product.product_name}</h4>
-                    <p className="text-sm text-gray-600">
-                      {product.quantity_sold} unidades
+                  <div className="text-right">
+                    <p className="font-bold text-gray-900">
+                      R$ {product.revenue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                    </p>
+                    <p className="text-sm text-green-600">
+                      Receita
                     </p>
                   </div>
                 </div>
-                <div className="text-right">
-                  <p className="font-bold text-gray-900">
-                    R$ {product.revenue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                  </p>
-                  <p className="text-sm text-green-600">
-                    Receita
-                  </p>
-                </div>
-              </div>
-            ))}
+              ))
+            )}
           </div>
         </div>
 
@@ -502,10 +510,17 @@ const Dashboard = () => {
       
       {/* Debug Panel (apenas em desenvolvimento) */}
       {import.meta.env.DEV && (
-        <DebugPanel 
-          isVisible={showDebugPanel}
-          onToggle={() => setShowDebugPanel(!showDebugPanel)}
-        />
+        <>
+          <DebugPanel 
+            isVisible={showDebugPanel}
+            onToggle={() => setShowDebugPanel(!showDebugPanel)}
+          />
+          
+          {/* Alert Debugger */}
+          <div className="mt-6">
+            <AlertDebugger />
+          </div>
+        </>
       )}
     </>
   );

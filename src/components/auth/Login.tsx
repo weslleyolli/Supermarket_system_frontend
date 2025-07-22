@@ -48,10 +48,15 @@ const Login: React.FC = () => {
         {/* Logo and Title */}
         <div className="text-center mb-8">
           <div className="flex items-center justify-center mb-6">
-            <ShoppingCart className="h-8 w-8 text-red-500 mr-3" />
-            <h1 className="text-3xl font-bold text-white tracking-wide">
-              O BARATEIRO
-            </h1>
+            <ShoppingCart className="h-16 w-16 text-red-500 mr-4" />
+            <div>
+              <h1 className="text-3xl font-bold text-white tracking-wide">
+                O BARATEIRO
+              </h1>
+              <p className="text-lg text-gray-300 tracking-wide mt-1">
+                Atacado e varejo
+              </p>
+            </div>
           </div>
         </div>
 

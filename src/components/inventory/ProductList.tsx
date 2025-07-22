@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { useStock } from '../../hooks/useStock';
 import { Search, Plus, Edit, Trash2, Package, AlertTriangle, RefreshCw } from 'lucide-react';
 import { apiService } from '../../services/api';
 
@@ -421,14 +422,15 @@ const ProductList: React.FC = () => {
 };
 
 // Componente do Modal de Formulário
-interface ProductFormModalProps {
+export interface ProductFormModalProps {
   product?: Product | null;
   categories: Category[];
   onClose: () => void;
   onSave: () => void;
 }
 
-const ProductFormModal: React.FC<ProductFormModalProps> = ({ product, categories, onClose, onSave }) => {
+export const ProductFormModal: React.FC<ProductFormModalProps> = ({ product, categories, onClose, onSave }) => {
+  const { createStockEntry } = useStock();
   const [formData, setFormData] = useState({
     name: product?.name || '',
     barcode: product?.barcode || '',
@@ -452,15 +454,35 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({ product, categories
     setError(null);
 
     try {
-      const productData = {
-        ...formData,
-        category_id: parseInt(formData.category_id as string)
+      // Monta apenas os campos aceitos pelo backend
+      const productData: any = {
+        name: formData.name,
+        barcode: formData.barcode,
+        price: formData.price,
+        cost_price: formData.cost_price,
+        stock_quantity: formData.stock_quantity,
+        min_stock_level: formData.min_stock_level,
+        category_id: parseInt(formData.category_id as string),
+        unit: formData.unit || 'UN',
       };
+      if (formData.description && formData.description.trim() !== '') {
+        productData.description = formData.description;
+      }
 
+      let createdProduct = null;
       if (product) {
         await apiService.updateProduct(product.id, productData);
       } else {
-        await apiService.createProduct(productData);
+        createdProduct = await apiService.createProduct(productData);
+        // Após criar, registra movimentação de entrada
+        if (createdProduct && createdProduct.id && formData.stock_quantity > 0) {
+          await createStockEntry({
+            product_id: createdProduct.id,
+            quantity: formData.stock_quantity,
+            unit_cost: formData.cost_price,
+            reason: 'Cadastro de novo produto',
+          });
+        }
       }
 
       onSave();
